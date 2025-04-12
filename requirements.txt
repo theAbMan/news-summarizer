@@ -4,3 +4,8 @@ transformers
 beautifulsoup4
 newspaper3k
 torch
+requests
+python-dotenv
+lxml_html_clean
+readability-lxml
+lxml
