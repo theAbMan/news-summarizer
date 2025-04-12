@@ -12,6 +12,7 @@ def fetch_top_headlines():
 
     response = requests.get(url)
     articles = response.json().get("articles",[])
+    print("📰 Raw NewsAPI articles:", articles)
     return [
         {
         "title": a['title'],
