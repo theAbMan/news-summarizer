@@ -3,46 +3,59 @@ name: Deploy News Summarizer to AKS
 on:
   push:
     branches:
-      - master
+      - master  # or 'main' if you're using main branch
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # 2. Login to Azure using service principal
     - name: Login to Azure
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    # 3. Set environment variables (shell-safe)
     - name: Set environment variables
       run: |
-        echo "ACR_NAME=newssummariseracr" >> $GITHUB_ENV
-        echo "IMAGE_NAME=news-summarizer" >> $GITHUB_ENV
-        echo "TAG=v1" >> $GITHUB_ENV
-        echo "IMAGE=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ env.TAG }}" >> $GITHUB_ENV
+        ACR_NAME="newssummariseracr"
+        IMAGE_NAME="news-summarizer"
+        TAG="v1"
+        IMAGE="${ACR_NAME}.azurecr.io/${IMAGE_NAME}:${TAG}"
 
-    - name: Confirm env vars (debug step)
+        echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+        echo "TAG=$TAG" >> $GITHUB_ENV
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+    # 4. Show variables for debugging
+    - name: Confirm environment variables
       run: |
-        echo "IMAGE: ${{ env.IMAGE }}"
+        echo "Using image: ${{ env.IMAGE }}"
 
+    # 5. Docker login to ACR
     - name: Docker login to ACR
       run: az acr login --name ${{ env.ACR_NAME }}
 
+    # 6. Build and push Docker image
     - name: Build and push Docker image
       run: |
         docker build -t ${{ env.IMAGE }} .
         docker push ${{ env.IMAGE }}
 
+    # 7. Set AKS context (kubeconfig)
     - name: Set AKS context
       uses: azure/aks-set-context@v3
       with:
         resource-group: news-summarizer-rg
         cluster-name: news-summarizer-aks
 
+    # 8. Deploy new image to AKS
     - name: Deploy to AKS
       run: |
         kubectl set image deployment/news-summarizer news-summarizer=${{ env.IMAGE }}
