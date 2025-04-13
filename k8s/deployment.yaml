@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-summarizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: news-summarizer
+  template:
+    metadata:
+      labels:
+        app: news-summarizer
+    spec:
+      containers:
+        - name: news-summarizer
+          image: newssummariseracr.azurecr.io/news-summarizer:v1
+          ports:
+            - containerPort: 8000
+          env:
+            - name: NEWSAPI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: newsapi-secret
+                  key: NEWSAPI_KEY
