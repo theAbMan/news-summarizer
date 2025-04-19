@@ -4,12 +4,20 @@ from app.summarizer import summarize_text
 from app.news_fetcher import fetch_top_headlines
 from app.classifier import classify_news
 from app.utils import extract_article_text
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 class TextInput(BaseModel):
     text : str
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/top-news")
 def top_news(niche:str=None):
